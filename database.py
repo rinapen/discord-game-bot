@@ -1,13 +1,17 @@
 import pymongo
 import datetime
-from config import MONGO_URI, DB_NAME, TOKENS_COLLECTION, USERS_COLLECTION, TRANSACTIONS_COLLECTION
-import pytz 
+from config import MONGO_URI, DB_NAME, TOKENS_COLLECTION, USERS_COLLECTION, USER_TRANSACTIONS_COLLECTION, SETTINGS_COLLECTION, CASINO_STATS_COLLECTION, MODELS_COLLECTION, CASINO_TRANSACTION_COLLECTION
 
 client = pymongo.MongoClient(MONGO_URI)
 db = client[DB_NAME]
 tokens_collection = db[TOKENS_COLLECTION]
 users_collection = db[USERS_COLLECTION]
-transactions_collection = db[TRANSACTIONS_COLLECTION]
+settings_collection = db[SETTINGS_COLLECTION]
+casino_stats_collection = db[CASINO_STATS_COLLECTION]
+models_collection = db[MODELS_COLLECTION]
+
+user_transactions_collection = db[USER_TRANSACTIONS_COLLECTION]
+casino_transactions_collection = db[CASINO_TRANSACTION_COLLECTION]
 
 def get_tokens():
     return tokens_collection.find_one({}) or {}
@@ -26,16 +30,15 @@ def get_user_balance(user_id):
 def update_user_balance(user_id, amount):
     users_collection.update_one(
         {"user_id": user_id},
-        {"$inc": {"balance": int(amount)}},  # **intに変換して保存**
+        {"$inc": {"balance": int(amount)}},
         upsert=True
     )
 
-def register_user(user_id, email, password, sender_external_id):
+def register_user(user_id, username, sender_external_id):
     users_collection.update_one(
         {"user_id": user_id},
         {"$set": {
-            "email": email,
-            "password": password,
+            "username": username,
             "sender_external_id": sender_external_id,
             "balance": 0
         }},
@@ -43,17 +46,20 @@ def register_user(user_id, email, password, sender_external_id):
     )
 
 def log_transaction(user_id, type, amount, fee, total, receiver=None):
-    DIFF_JST_FROM_UTC = 9
-    now = datetime.datetime.now()
+    """ ユーザーの取引履歴を `transactions` にリスト形式で記録 (JST対応) """
 
+    now = datetime.datetime.now()
     transaction = {
-        "user_id": user_id,
-        "type": type,  # "in", "out", "transfer"
+        "type": type,  # "in", "out", "send"
         "amount": amount,
         "fee": fee,
         "total": total,
         "receiver": receiver,
-        "timestamp": now  # **JST（日本標準時）で記録**
+        "timestamp": now  # **JST（日本標準時）**
     }
 
-    transactions_collection.insert_one(transaction)
+    user_transactions_collection.update_one(
+        {"user_id": user_id},
+        {"$push": {"transactions": transaction}}, 
+        upsert=True
+    )
