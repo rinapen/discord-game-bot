@@ -4,14 +4,39 @@ from discord import app_commands
 from bot import bot
 from database.db import get_user_balance, update_user_balance
 from utils.logs import b_send_casino_log
-from config import WIN_EMOJI, LOSE_EMOJI
+from utils.stats import get_user_net_profit, log_transaction
 
 BASE_COLOR_CODE = 0x2b2d31
 VALID_BETS = [100, 500, 1000]
 GRID_SIZE = 5
-MINE_OPTIONS = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]  # 最大15個
+MINE_OPTIONS = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 
 games = {}
+
+def biased_mine_placement(user_id, mine_count):
+    """ユーザーの損益によって地雷の配置をバイアスさせる"""
+    all_cells = [(x, y) for x in range(GRID_SIZE) for y in range(GRID_SIZE)]
+
+    # 中央周辺（よく押されがち）
+    center_cells = [(2, 2), (1, 2), (2, 1), (2, 3), (3, 2)]
+
+    try:
+        profit = get_user_net_profit(user_id, "mines", days=7)
+    except:
+        profit = 0  # 取得失敗時は通常扱い
+
+    if profit > 3000:
+        # 勝ちすぎてる → 中央に地雷を置いて吸う
+        priority = center_cells + [c for c in all_cells if c not in center_cells]
+    elif profit < -2000:
+        # 負けすぎてる → 中央を避けて地雷を配置して勝たせる
+        priority = [c for c in all_cells if c not in center_cells] + center_cells
+    else:
+        # 通常ランダム
+        random.shuffle(all_cells)
+        return set(all_cells[:mine_count])
+
+    return set(priority[:mine_count])
 
 class MinesGame:
     def __init__(self, user_id, bet, mine_count):
@@ -19,14 +44,18 @@ class MinesGame:
         self.bet = bet
         self.mine_count = mine_count
         self.grid = [["⬜" for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
-        self.mines = set(random.sample([(x, y) for x in range(GRID_SIZE) for y in range(GRID_SIZE)], self.mine_count))
+        
+        # ✅ 地雷配置をコントロール
+        self.mines = biased_mine_placement(user_id, mine_count)
+        
         self.revealed = set()
         self.finished = False
 
-        self.base_reward = bet / (5 + self.mine_count / 5)
-        self.current_reward = 0  
+        self.base_reward = bet / (5 + mine_count / 5)
+        self.current_reward = 0
         self.payout_multiplier = 1.0
         self.consecutive_wins = 0
+
 
     def reveal(self, x, y):
         """マスを開ける処理"""
@@ -116,11 +145,10 @@ class MinesButton(discord.ui.Button):
 
         if result == "lose":
             payout = 0
-            # update_user_balance(user_id, -self.game.bet)
+            log_transaction(user_id, "mines", self.game.bet, payout) 
             await b_send_casino_log(interaction, self.game.bet, payout, "")
-
             await end_mines_game(interaction, self.game, "💥 ハズレを引いた！", payout)
-        else:
+        else:   
             await update_mines_board(interaction, self.game)
 
 class CashoutButton(discord.ui.Button):
@@ -143,13 +171,13 @@ class CashoutButton(discord.ui.Button):
                 ephemeral=True
             )
             return
-        
+                
         payout = self.game.cashout()
-        update_user_balance(user_id, payout)  # **獲得額のみ加算**
-        new_balance = get_user_balance(user_id)  # **最新の残高を取得**
-
+        update_user_balance(user_id, payout)
+        log_transaction(user_id, "mines", self.game.bet, payout) 
         await b_send_casino_log(interaction, self.game.bet, payout, "")
-        # **出金成功メッセージ**
+
+        new_balance = get_user_balance(user_id)
         await interaction.response.send_message(
             embed=discord.Embed(
                 title="✅ 出金成功！",
@@ -245,7 +273,7 @@ async def mines(interaction: discord.Interaction, amount: int, mines: int):
     await interaction.response.send_message(embed=embed, view=view)
 
     cashout_embed = discord.Embed(
-        title="💰 PNC 出金",
+        title="PNC 出金",
         description="現在のPNCを引き出す場合はボタンを押してください。",
         color=discord.Color.gold()
     )
