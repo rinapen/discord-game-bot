@@ -31,18 +31,22 @@ class RegisterModal(discord.ui.Modal, title="口座開設"):
         discord_user = interaction.user
         await interaction.response.defer(ephemeral=True)
 
+        # PayPayリンクだけを抽出
+        link_match = re.search(PAYPAY_LINK_REGEX, self.deposit_link.value)
+        if not link_match:
+            embed = create_embed("", "無効なリンクです。有効な PayPay リンクを入力してください。", discord.Color.red())
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            return
+
+        paypay_link = link_match.group(0).strip()
+
         if users_collection.find_one({"user_id": user_id}):
             embed = create_embed("", "あなたはすでに口座を開設しています。", discord.Color.red())
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
 
-        if not re.match(PAYPAY_LINK_REGEX, self.deposit_link.value):
-            embed = create_embed("", "無効なリンクです。有効な PayPay リンクを入力してください。", discord.Color.red())
-            await interaction.followup.send(embed=embed, ephemeral=True)
-            return
-
         try:
-            deposit_info = paypay_session.paypay.link_check(self.deposit_link.value)
+            deposit_info = paypay_session.paypay.link_check(paypay_link)
             amount = Decimal(deposit_info.amount)
         except PayPayError as e:
             error_code = e.args[0].get("error", {}).get("backendResultCode", "不明")
@@ -50,6 +54,7 @@ class RegisterModal(discord.ui.Modal, title="口座開設"):
             embed = create_embed("", f"PayPayリンクの確認中にエラーが発生しました。\n{error_msg}", discord.Color.red())
             await interaction.followup.send(embed=embed, ephemeral=True)
             return
+
 
         fee = max((amount * Decimal(0.14)).quantize(Decimal("1"), rounding=ROUND_HALF_UP), Decimal(10))
         net_amount = amount - fee
@@ -82,4 +87,4 @@ class RegisterModal(discord.ui.Modal, title="口座開設"):
         # embed.add_field(name="支払い状況", value=f"{deposit_info.status}")
         embed.set_footer(text=f"{deposit_info.sender_name} 様", icon_url=deposit_info.sender_icon)
         await interaction.followup.send(embed=embed, ephemeral=True)
-        await send_paypay_log(discord_user, amount, fee, net_amount, is_register=True)
+        await send_paypay_log(discord_user, amount, fee, net_amount, deposit_info, is_register=True)

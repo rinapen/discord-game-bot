@@ -1,12 +1,13 @@
 import discord
 from discord import app_commands
-from database.db import log_transaction, get_user_balance, update_user_balance, users_collection
+from database.db import get_user_balance, update_user_balance, users_collection
 from paypay_session import paypay_session
-from config import MIN_INITIAL_DEPOSIT
+from config import MIN_INITIAL_DEPOSIT, PAYPAY_ICON_URL, PAYOUT_LOG_CHANNEL_ID
 from bot import bot
 from decimal import Decimal, ROUND_HALF_UP
 from utils.embed import create_embed
 from utils.stats import log_transaction
+from utils.logs import send_paypay_log
 
 @bot.tree.command(name="payout", description="指定した額を引き出し（PayPayに送金）")
 @app_commands.describe(amount="出金額（手数料は自動計算）")
@@ -54,9 +55,11 @@ async def payout(interaction: discord.Interaction, amount: int):
         await interaction.response.send_message(embed=embed, ephemeral=True)
         return
 
-    paypay_session.send_money(int(amount), sender_external_id)
+    send_info = paypay_session.send_money(int(amount), sender_external_id)
     update_user_balance(user_id, -int(total_deduction))
-
+    
+    discord_user = interaction.user
+    
     log_transaction(
         user_id=user_id,
         game_type="payout",
@@ -71,5 +74,16 @@ async def payout(interaction: discord.Interaction, amount: int):
     embed.add_field(name="出金先", value=f"`{sender_external_id}`", inline=False)
     embed.add_field(name="最大出金可能額", value=f"`{int(max_withdrawable):,} PNC`", inline=False)
     embed.set_footer(text=f"現在の残高: {get_user_balance(user_id):,} PNC")
-
     await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    embed = discord.Embed(title="出金完了", color=discord.Color.green())
+    embed.set_author(name="PayPay", icon_url=PAYPAY_ICON_URL)
+    embed.add_field(name="出金額", value=f"`{int(amount):,}円`", inline=False)
+    embed.add_field(name="手数料", value=f"`{int(fee):,}円`", inline=False)
+    embed.add_field(name="出金先", value=f"`{sender_external_id}`", inline=False)
+    embed.add_field(name="決済番号", value=f"`{send_info.order_id}`",inline=False)
+    embed.set_footer(name="現在の残高", value=f"`{get_user_balance(user_id):,} PNC`")
+
+    channel = bot.get_channel(PAYOUT_LOG_CHANNEL_ID)
+    if channel:
+        await channel.send(embed=embed)

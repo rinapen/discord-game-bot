@@ -56,10 +56,13 @@ def get_daily_profit(target_date: str):
     return daily_profit
 
 def get_total_pnc():
-    """全ユーザーのPNC合計を取得"""
+    """指定ユーザーを除いた全ユーザーのPNC合計を取得"""
+    excluded_ids = [1135891552045121557, 1154344959646908449]
+
     total = list(users_collection.aggregate([
+        {"$match": {"user_id": {"$nin": excluded_ids}}},
         {"$group": {"_id": None, "total_pnc": {"$sum": "$balance"}}}
-    ])) 
+    ]))
 
     return total[0]["total_pnc"] if total else 0
 

@@ -10,12 +10,14 @@ from database.db import (
 )
 from utils.embed import create_embed
 from utils.logs import send_casino_log
-from config import WIN_EMOJI, LOSE_EMOJI
+from utils.pnc import get_total_pnc
 from utils.stats import log_transaction, get_user_net_profit
+from config import WIN_EMOJI, LOSE_EMOJI
 from paypay_session import paypay_session
 
 VALID_BETS = {"red": "🔴", "black": "⚫", "green": "🟢"}
 MIN_BET = 25
+BASELINE = 9000  # 元々の運営元金（初期資金）
 
 BET_PENALTY = {25: 0, 50: -1.0, 100: -2.0, 200: -3.5, 500: -5.5, 1000: -8.0}
 BASE_WIN_RATE = {"red": 43, "black": 43, "green": 2.0}
@@ -66,15 +68,36 @@ async def roulette(interaction: discord.Interaction, bet: str, amount: int):
 
         # ✅ 運営のPayPay残高による全体勝率調整
         op_balance = get_operator_balance()
-        if op_balance < 3000:
-            win_rate -= 5  # 赤字圏はガッツリ絞る
-        elif op_balance < 5000:
-            win_rate -= 3  # 軽く回収モード
-        elif op_balance > 12000:
-            win_rate += 2  # 利益出てるならちょい緩め
+        op_ratio = op_balance / BASELINE
 
+        if op_ratio < 0.3:
+            win_rate -= 7
+        elif op_ratio < 0.6:
+            win_rate -= 4
+        elif op_ratio < 1.0:
+            win_rate -= 2
+        elif op_ratio > 2.0:
+            win_rate += 4
+        elif op_ratio > 1.5:
+            win_rate += 2
+
+        # 📈 PNC経済全体による補正
+        total_pnc = get_total_pnc()
+        inflation_ratio = total_pnc / 300000  # 想定供給量
+
+        if inflation_ratio > 1.5:
+            win_rate -= 5
+        elif inflation_ratio > 1.2:
+            win_rate -= 3
+        elif inflation_ratio < 0.8:
+            win_rate += 3
+        elif inflation_ratio < 0.5:
+            win_rate += 5
+
+        # 🎯 最終補正
         win_rate = max(0, min(win_rate, 100))
 
+        print(f"{user_id}: {win_rate}")
     is_win = random.uniform(0, 100) <= win_rate
     update_user_balance(user_id, -amount)
 

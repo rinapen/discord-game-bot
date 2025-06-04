@@ -22,15 +22,18 @@ async def payin(interaction: discord.Interaction, link: str):
         embed = create_embed("", "あなたの口座が見つかりません。\n `/kouza` で口座を開設してください。", discord.Color.red())
         await interaction.response.send_message(embed=embed, ephemeral=True)
         return
-
-    if not re.match(PAYPAY_LINK_REGEX, link):
+    print(link)
+    # --- リンクだけ抽出するよう修正 ---
+    link_match = re.search(PAYPAY_LINK_REGEX, link)
+    if not link_match:
         embed = create_embed("", "無効なリンクです。有効な PayPay リンクを入力してください。", discord.Color.red())
         await interaction.response.send_message(embed=embed, ephemeral=True)
         return
+    paypay_link = link_match.group(0).strip()
 
     try:
-        link_info = paypay_session.paypay.link_check(link)
-        print(f"DEBUG: Link Status - {link_info.status}") 
+        link_info = paypay_session.paypay.link_check(paypay_link)
+        print(f"DEBUG: Link Status - {link_info.status}")
 
         if link_info.status in ["COMPLETED", "REJECTED", "FAILED"]:
             embed = create_embed("", "このリンクはすでに使用済み、または無効です。", discord.Color.red())
@@ -47,7 +50,7 @@ async def payin(interaction: discord.Interaction, link: str):
         return
 
     fee = max((amount * Decimal(0.14)).quantize(Decimal("1"), rounding=ROUND_HALF_UP), Decimal(10))
-    net_amount = amount - fee 
+    net_amount = amount - fee
 
     if amount < (Decimal(MIN_INITIAL_DEPOSIT) + fee):
         embed = create_embed("", f"最低入金額は `{int(MIN_INITIAL_DEPOSIT + fee):,} PNC` です。", discord.Color.yellow())
@@ -55,9 +58,9 @@ async def payin(interaction: discord.Interaction, link: str):
         return
 
     try:
-        paypay_session.paypay.link_receive(link)
+        paypay_session.paypay.link_receive(paypay_link)
         update_user_balance(user_id, int(net_amount))
-        
+
         log_transaction(
             user_id=user_id,
             game_type="payin",
@@ -71,7 +74,7 @@ async def payin(interaction: discord.Interaction, link: str):
         embed.add_field(name="現在の残高", value=f"`{get_user_balance(user_id):,} PNC`", inline=False)
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
-        await send_paypay_log(user, amount, fee, net_amount)
+        await send_paypay_log(user, amount, fee, net_amount, link_info)
 
     except PayPayError as e:
         embed = create_embed("", "入金処理中にエラーが発生しました。\nこのリンクはすでに使用済み、または無効です。", discord.Color.red())

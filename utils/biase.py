@@ -1,0 +1,2 @@
+
+GRID_SIZE = 5

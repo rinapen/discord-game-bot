@@ -11,10 +11,10 @@ from bot import bot
 from utils.pnc import get_total_pnc, get_daily_profit, get_monthly_revenue
 import asyncio
 import commands
-
+from commands.account import AccountView
 JST = pytz.timezone("Asia/Tokyo")
 
-@tasks.loop(time=datetime.time(hour=0, minute=0, tzinfo=JST))  # ⏰ **毎日 0:00 JST に実行**
+@tasks.loop(time=datetime.time(hour=0, minute=0, tzinfo=JST)) 
 async def daily_report_task():
     """⏳ 自動的に毎日 0:00 JST にレポートを送信"""
     await send_daily_report()
@@ -85,6 +85,7 @@ async def keep_alive():
 async def on_ready():
     """🔵 ボット起動時にタスクを開始"""
     await bot.tree.sync()
+    bot.add_view(AccountView()) 
     print(f"🟢 Logged in as {bot.user}")
 
     # **タスクがすでに起動していなければ開始**
