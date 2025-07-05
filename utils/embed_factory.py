@@ -1,6 +1,6 @@
 import discord
 from utils.embed import create_embed
-
+from config import ACCOUNT_CHANNEL_ID
 class EmbedFactory:
     @staticmethod
     def already_registered():
@@ -13,7 +13,15 @@ class EmbedFactory:
             f"### **20秒以内に**{amount}**円のPayPayリンクを送信してください。**",
             discord.Color.orange()
         )
-
+    
+    @staticmethod
+    def require_registration_prompt():
+        return create_embed(
+            "",
+            f"あなたはアカウントを紐づけていません。<#{ACCOUNT_CHANNEL_ID}>のパネルから登録してください。",
+            discord.Color.red()
+        )
+    
     @staticmethod
     def error(message="予期せぬエラーが発生しました"):
         return create_embed("❌ エラー", message, discord.Color.red())
