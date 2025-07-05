@@ -24,5 +24,6 @@ ENV/
 kotoha.py
 
 commands/archive/
+utils/archive/
 emoji
 print_user_balances.py

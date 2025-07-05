@@ -1,6 +1,7 @@
 import discord
 from utils.embed import create_embed
 from config import ACCOUNT_CHANNEL_ID
+from utils.emojis import PNC_EMOJI_STR
 class EmbedFactory:
     @staticmethod
     def already_registered():
@@ -22,6 +23,29 @@ class EmbedFactory:
             discord.Color.red()
         )
     
+    @staticmethod
+    def balance_display(balance: int):
+        return discord.Embed(
+            description=f"# {PNC_EMOJI_STR}`{balance:,}`",
+            color=discord.Color.green()
+        )
+    
+    @staticmethod
+    def bet_too_low(min_bet: int = 100):
+        return create_embed(
+            "",
+            f"ベット額は{min_bet}以上にしてください。",
+            discord.Color.red()
+        )
+    
+    @staticmethod
+    def insufficient_balance(balance: int):
+        return create_embed(
+            "",
+            f"残高不足です。現在の残高: {PNC_EMOJI_STR}`{balance:,}`",
+            discord.Color.red()
+        )
+        
     @staticmethod
     def error(message="予期せぬエラーが発生しました"):
         return create_embed("❌ エラー", message, discord.Color.red())
