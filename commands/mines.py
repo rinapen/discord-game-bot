@@ -8,7 +8,7 @@ from utils.embed import create_embed
 from utils.color import BASE_COLOR_CODE
 from utils.embed_factory import EmbedFactory
 
-from games.mines_game import MinesGame, MinesView, CashoutButton, create_mines_embed
+from ui.game.mines import MinesGame, MinesView, CashoutButton, create_mines_embed
 
 MINE_OPTIONS = list(range(1, 25))
 
