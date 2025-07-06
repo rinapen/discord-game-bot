@@ -5,7 +5,7 @@ from bot import bot
 import config
 from database.db import get_account_panel_message_id, save_account_panel_message_id
 
-from ui.views import AccountView
+from commands.account import AccountView
 
 async def setup_account_panel():
     try:

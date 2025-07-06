@@ -7,16 +7,16 @@ import aiohttp
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 
-from pf import ProvablyFairParams
 from database.db import update_user_balance
 
+from ui.pf import ProvablyFairParams
 from utils.emojis import PNC_EMOJI_STR, WIN_EMOJI
 from utils.embed import create_embed
 from utils.logs import send_casino_log
 from utils.color import BLACKJACK_COLOR
 
 CARD_PATH = "assets/bj/cards/"
-TABLE_IMAGE_PATH = "assets/bj/table.png"
+TABLE_IMAGE_PATH = f"assets/bj/table.png"
 FONT_PATH = "assets/font/NotoSansJP-VariableFont_wght.ttf"
 
 blackjack_games = {}
@@ -189,7 +189,7 @@ class BlackjackGame:
         self.finished = False
         self.cursor = 0
         self.pf = ProvablyFairParams(client_seed, server_seed, nonce)
-        dealer_files = [f for f in os.listdir("assets/dealer") if f.endswith(".png")]
+        dealer_files = [f for f in os.listdir("assets/bj/dealer") if f.endswith(".png")]
         dealer_file = random.choice(dealer_files)
         self.dealer_file = dealer_file
         self.dealer_name = os.path.splitext(dealer_file)[0]
@@ -291,7 +291,7 @@ class BlackjackGame:
         draw_score(draw, px, py, "You", player_total)
 
         icon_font = ImageFont.truetype(FONT_PATH, 36)
-        dealer_icon = Image.open(f"assets/dealer/{self.dealer_file}").convert("RGBA").resize((120, 120))
+        dealer_icon = Image.open(f"assets/bj/dealer/{self.dealer_file}").convert("RGBA").resize((120, 120))
         dealer_name = self.dealer_name
 
         user_icon = Image.open(user_avatar_data).convert("RGBA").resize((120, 120))

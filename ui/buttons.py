@@ -1,12 +1,12 @@
 import discord
 
 from database.db import users_collection
+from commands.account import LinkSubmitView
 from utils.embed import create_embed
 from utils.pnc import generate_random_amount
 from utils.embed_factory import EmbedFactory
 
 from ui.modals import PayinModal
-from ui.views import LinkSubmitView
 
 pending_amounts = {}
 class RegisterButton(discord.ui.Button):
