@@ -3,6 +3,7 @@ import re
 from database.db import get_user_balance
 from utils.embed import create_embed
 from utils.embed_factory import EmbedFactory
+from utils.emojis import PNC_EMOJI_STR
 from utils.color import BASE_COLOR_CODE
 from config import HITANDBLOW_CATEGORY_ID
 
@@ -43,7 +44,6 @@ async def on_hitandblow_command(message: discord.Message):
 
         opponent = await message.guild.fetch_member(opponent_id)
 
-        # 残高確認
         challenger_balance = get_user_balance(challenger.id)
         opponent_balance = get_user_balance(opponent.id)
 
@@ -62,11 +62,10 @@ async def on_hitandblow_command(message: discord.Message):
             await message.channel.send(embed=embed)
             return
 
-        # 承諾ボタン表示
         view = HitAndBlowAcceptButton(challenger, opponent, amount)
         embed = create_embed(
-            title="🎮 ヒットアンドブロー 勝負の申し込み！",
-            description=f"{challenger.mention} があなたに {amount} PNC でヒットアンドブローを申し込んでいます。\n\n承諾するには下のボタンを押してください（制限時間：60秒）",
+            title="ヒットアンドブローの申し込み",
+            description=f"{challenger.mention} があなたに {PNC_EMOJI_STR}`{amount}`でヒットアンドブローを申し込んでいます。\n\n承諾するには下のボタンを押してください（制限時間：60秒）",
             color=BASE_COLOR_CODE
         )
         await message.channel.send(content=opponent.mention, embed=embed, view=view)
@@ -77,7 +76,6 @@ async def on_hitandblow_command(message: discord.Message):
             await message.channel.send("⏳ 時間切れ。対戦はキャンセルされました。")
             return
 
-        # チャンネル作成
         category = message.guild.get_channel(HITANDBLOW_CATEGORY_ID)
         overwrites = {
             message.guild.default_role: discord.PermissionOverwrite(view_channel=False),
