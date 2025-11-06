@@ -1,48 +1,79 @@
+"""
+カジノボットの設定ファイル
+環境変数から設定を読み込み、デフォルト値を提供します
+"""
 import os
+from typing import Final
 from dotenv import load_dotenv
 import pytz
 
 load_dotenv()
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
-DB_NAME = os.getenv("DB_NAME", "paypay_bot")
-TOKENS_COLLECTION = os.getenv("TOKENS_COLLECTION", "tokens")
-USERS_COLLECTION = os.getenv("USERS_COLLECTION", "users")
-SETTINGS_COLLECTION = os.getenv("SETTINGS_COLLECTION", "settings")
-CASINO_STATS_COLLECTION = os.getenv("CASINO_STATS_COLLECTION", "casino_stats")
-MODELS_COLLECTION = os.getenv("MODELS_COLLECTION", "models")
-BLACKJACK_LOGS_COLLECTION = os.getenv("BLACKJACK_LOGS_COLLECTION", "blackjack_logs")
-USER_TRANSACTIONS_COLLECTION = os.getenv("USER_TRANSACTIONS_COLLECTION", "user_transactions")
-CASINO_TRANSACTION_COLLECTION = os.getenv("CASINO_TRANSACTION_COLLECTION", "casino_transactions")
-BET_HISTORY_COLLECTION = os.getenv("BET_HISTORY_COLLECTION", "bet_history")
-BOT_STATE_COLLECTION = os.getenv("BOT_STATE_COLLECTION", "bot_state")
-BLACKLIST_COLLECTION = os.getenv("BLACKLIST_COLLECTION", "blacklist")
+# ========================================
+# データベース設定
+# ========================================
+MONGO_URI: Final[str] = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+DB_NAME: Final[str] = os.getenv("DB_NAME", "paypay_bot")
 
-MIN_INITIAL_DEPOSIT = 100  # 初期入金の最低金額
-TAX_RATE = 0.1  # 10% の税金
-FEE_RATE = 0.05  # 5% の手数料
-PAYOUT_MIN_JPY = 100
-PAYOUT_MIN_PNC = PAYOUT_MIN_JPY * 10
-# PAYPAY_ASSETS
-PAYPAY_ICON_URL="https://cdn.discordapp.com/attachments/1219916908485283880/1380606272629637271/AieC1ypSSh_2rctvrNtVggyFRP9cNtvnEIPkVmzZGFlhN8bNdHCl3GZbxK7O8vCe7A.png?ex=68447d49&is=68432bc9&hm=fa35f7815dfffd5d0b5ec152538ce2ab4b4031079d3dcdaf67c71fb591714f4a&"
-PAYPAY_LINK_REGEX = r"https://pay\.paypay\.ne\.jp/[a-zA-Z0-9]+"
-# FOLDER PATH
-DICE_FOLDER = "assets/dice"
-# CHANNEL, GUILD ID
-GUILD_ID=1379480185380012053
-ACCOUNT_CHANNEL_ID = 1379480186164088905
-INVITE_PANEL_CHANNEL_ID = 1390239917153583104
-HITANDBLOW_CATEGORY_ID = 1379488590219968604
-PAYOUT_DISABLED = True
-# FLIP
-FLIP_GIF_URL = "https://cdn.discordapp.com/attachments/1219916908485283880/1383914774131376270/U4ObEcJW9ksvEN6tCmsf1750021234-1750021370.gif?ex=68508692&is=684f3512&hm=7370c85f4237840cf3b769c29f51f2cb60033e351e934206a2bbab75209d77fc&"
-THUMBNAIL_URL = "https://cdn.discordapp.com/attachments/1219916908485283880/1386322194111533147/ChatGPT_Image_2025622_21_28_04.png?ex=685948a7&is=6857f727&hm=548ff6d889653c59ec69f641efc2c21192c6cdb2c0798ae2c5d2d3cc289a38dd&"
-FRONT_IMG = "https://cdn.discordapp.com/attachments/1219916908485283880/1383915331185020989/0.png?ex=68508716&is=684f3596&hm=1da630e3b7a3447d7c72e434c2b8626775063a1b2b4f58abbb595f2d2bafa3ee&"
-BACK_IMG = "https://cdn.discordapp.com/attachments/1219916908485283880/1383915330933620796/23.png?ex=68508716&is=684f3596&hm=ba04bb357d7656faf58734b0f94af17e2463cd00a356bb74e0a338044ea47bd5&"
+# コレクション名
+TOKENS_COLLECTION: Final[str] = os.getenv("TOKENS_COLLECTION", "tokens")
+USERS_COLLECTION: Final[str] = os.getenv("USERS_COLLECTION", "users")
+SETTINGS_COLLECTION: Final[str] = os.getenv("SETTINGS_COLLECTION", "settings")
+CASINO_STATS_COLLECTION: Final[str] = os.getenv("CASINO_STATS_COLLECTION", "casino_stats")
+MODELS_COLLECTION: Final[str] = os.getenv("MODELS_COLLECTION", "models")
+BLACKJACK_LOGS_COLLECTION: Final[str] = os.getenv("BLACKJACK_LOGS_COLLECTION", "blackjack_logs")
+USER_TRANSACTIONS_COLLECTION: Final[str] = os.getenv("USER_TRANSACTIONS_COLLECTION", "user_transactions")
+CASINO_TRANSACTION_COLLECTION: Final[str] = os.getenv("CASINO_TRANSACTION_COLLECTION", "casino_transactions")
+BET_HISTORY_COLLECTION: Final[str] = os.getenv("BET_HISTORY_COLLECTION", "bet_history")
+BOT_STATE_COLLECTION: Final[str] = os.getenv("BOT_STATE_COLLECTION", "bot_state")
+BLACKLIST_COLLECTION: Final[str] = os.getenv("BLACKLIST_COLLECTION", "blacklist")
 
-JST = pytz.timezone("Asia/Tokyo")
+# ========================================
+# 経済設定
+# ========================================
+MIN_INITIAL_DEPOSIT: Final[int] = 100  # 初期入金の最低金額
+TAX_RATE: Final[float] = 0.1  # 10% の税金
+FEE_RATE: Final[float] = 0.05  # 5% の手数料
+PAYOUT_MIN_JPY: Final[int] = 100
+PAYOUT_MIN_PNC: Final[int] = PAYOUT_MIN_JPY * 10
+PAYOUT_DISABLED: Final[bool] = True
 
-CARD_EMOJIS = {
+# ========================================
+# PayPay設定
+# ========================================
+PAYPAY_ICON_URL: Final[str] = "https://cdn.discordapp.com/attachments/1219916908485283880/1380606272629637271/AieC1ypSSh_2rctvrNtVggyFRP9cNtvnEIPkVmzZGFlhN8bNdHCl3GZbxK7O8vCe7A.png?ex=68447d49&is=68432bc9&hm=fa35f7815dfffd5d0b5ec152538ce2ab4b4031079d3dcdaf67c71fb591714f4a&"
+PAYPAY_LINK_REGEX: Final[str] = r"https://pay\.paypay\.ne\.jp/[a-zA-Z0-9]+"
+
+# ========================================
+# パス設定
+# ========================================
+DICE_FOLDER: Final[str] = "assets/dice"
+
+# ========================================
+# Discord設定
+# ========================================
+GUILD_ID: Final[int] = 1379480185380012053
+ACCOUNT_CHANNEL_ID: Final[int] = 1379480186164088905
+INVITE_PANEL_CHANNEL_ID: Final[int] = 1390239917153583104
+HITANDBLOW_CATEGORY_ID: Final[int] = 1393793733492998206
+
+# ========================================
+# アセットURL
+# ========================================
+FLIP_GIF_URL: Final[str] = "https://cdn.discordapp.com/attachments/1219916908485283880/1383914774131376270/U4ObEcJW9ksvEN6tCmsf1750021234-1750021370.gif?ex=68508692&is=684f3512&hm=7370c85f4237840cf3b769c29f51f2cb60033e351e934206a2bbab75209d77fc&"
+THUMBNAIL_URL: Final[str] = "https://cdn.discordapp.com/attachments/1219916908485283880/1386322194111533147/ChatGPT_Image_2025622_21_28_04.png?ex=685948a7&is=6857f727&hm=548ff6d889653c59ec69f641efc2c21192c6cdb2c0798ae2c5d2d3cc289a38dd&"
+FRONT_IMG: Final[str] = "https://cdn.discordapp.com/attachments/1219916908485283880/1383915331185020989/0.png?ex=68508716&is=684f3596&hm=1da630e3b7a3447d7c72e434c2b8626775063a1b2b4f58abbb595f2d2bafa3ee&"
+BACK_IMG: Final[str] = "https://cdn.discordapp.com/attachments/1219916908485283880/1383915330933620796/23.png?ex=68508716&is=684f3596&hm=ba04bb357d7656faf58734b0f94af17e2463cd00a356bb74e0a338044ea47bd5&"
+
+# ========================================
+# タイムゾーン設定
+# ========================================
+JST: Final = pytz.timezone("Asia/Tokyo")
+
+# ========================================
+# ゲームアセット
+# ========================================
+CARD_EMOJIS: Final[dict[str, list[str]]] = {
     "S": ["<:s1:1348291843904901200>", "<:s2:1348291845561647196>", "<:s3:1348291847742689331>", "<:s4:1348291849332195358>",
           "<:s5:1348291851014373456>", "<:s6:1348291852788437073>", "<:s7:1348291859952304140>", "<:s8:1348291861521109122>",
           "<:s9:1348291863827714171>", "<:s10:1348291865853689926>", "<:sj:1348291868747628544>", "<:sq:1348291870857498634>",
@@ -64,12 +95,18 @@ CARD_EMOJIS = {
           "<:hk:1348291962863616000>"]
 }
 
-TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-PAYPAY_PHONE = os.getenv("PAYPAY_PHONE")
-PAYPAY_PASSWORD = os.getenv("PAYPAY_PASSWORD")
+# ========================================
+# 認証情報（環境変数から取得）
+# ========================================
+TOKEN: Final[str | None] = os.getenv("DISCORD_BOT_TOKEN")
+PAYPAY_PHONE: Final[str | None] = os.getenv("PAYPAY_PHONE")
+PAYPAY_PASSWORD: Final[str | None] = os.getenv("PAYPAY_PASSWORD")
 
-CASINO_LOG_CHANNEL_ID = os.getenv("CASINO_LOG_CHANNEL_ID")
-PAYIN_LOG_CHANNEL_ID = os.getenv("PAYIN_LOG_CHANNEL_ID")
-PAYOUT_LOG_CHANNEL_ID = os.getenv("PAYOUT_LOG_CHANNEL_ID")
-RANKING_CHANNEL_ID = os.getenv("RANKING_CHANNEL_ID")
-ADMIN_CHANNEL_ID = os.getenv("ADMIN_CHANNEL_ID")
+# ========================================
+# ログチャンネルID（環境変数から取得）
+# ========================================
+CASINO_LOG_CHANNEL_ID: Final[str | None] = os.getenv("CASINO_LOG_CHANNEL_ID")
+PAYIN_LOG_CHANNEL_ID: Final[str | None] = os.getenv("PAYIN_LOG_CHANNEL_ID")
+PAYOUT_LOG_CHANNEL_ID: Final[str | None] = os.getenv("PAYOUT_LOG_CHANNEL_ID")
+RANKING_CHANNEL_ID: Final[str | None] = os.getenv("RANKING_CHANNEL_ID")
+ADMIN_CHANNEL_ID: Final[str | None] = os.getenv("ADMIN_CHANNEL_ID")

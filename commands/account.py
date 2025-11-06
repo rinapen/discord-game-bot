@@ -13,6 +13,7 @@ from database.db import (
     update_user_balance,
     get_user_balance,
     register_user,
+    is_no_fee_mode_enabled,
     users_collection,
     active_users_collection,
 )
@@ -235,9 +236,16 @@ class PayinModal(discord.ui.Modal, title="入金"):
             return
 
         total_pnc = jpy_to_pnc(jpy_amount)
-        fee_jpy = max((jpy_amount * Decimal("0.14")).quantize(Decimal("1"), rounding=ROUND_HALF_UP), Decimal(10))
-        fee_pnc = jpy_to_pnc(fee_jpy)
-        net_pnc = total_pnc - fee_pnc
+        no_fee_day = is_no_fee_mode_enabled()
+
+        if no_fee_day:
+            fee_jpy = Decimal(0)
+            fee_pnc = Decimal(0)
+            net_pnc = total_pnc
+        else:
+            fee_jpy = max((jpy_amount * Decimal("0.14")).quantize(Decimal("1"), rounding=ROUND_HALF_UP), Decimal(10))
+            fee_pnc = jpy_to_pnc(fee_jpy)
+            net_pnc = total_pnc - fee_pnc
 
         gross_min_jpy = pnc_to_jpy(MIN_INITIAL_DEPOSIT)
         min_fee_jpy = max((gross_min_jpy * Decimal("0.14")).quantize(Decimal("1"), rounding=ROUND_HALF_UP), Decimal(10))

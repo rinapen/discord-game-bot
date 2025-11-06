@@ -1,2 +1,14 @@
-BLACKJACK_COLOR = 0x00704A
-BASE_COLOR_CODE = 0x393a41
+"""
+カラーコード定数
+ゲームやUIで使用する色定義
+"""
+from typing import Final
+
+# ゲームカラー
+BLACKJACK_COLOR: Final[int] = 0x00704A
+BASE_COLOR_CODE: Final[int] = 0x393a41
+
+# ステータスカラー
+SUCCESS_COLOR: Final[int] = 0x26ffd4
+ERROR_COLOR: Final[int] = 0xff3d74
+WARNING_COLOR: Final[int] = 0xffa500

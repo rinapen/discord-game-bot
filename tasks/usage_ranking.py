@@ -1,41 +1,63 @@
-import discord
-from discord.ext import tasks
-import pytz
-from datetime import time, datetime
+"""
+月間利用ランキングタスク
+ユーザーの月間貢献度を集計してランキングを表示します
+"""
 import os
 import json
 from collections import defaultdict
+from datetime import time, datetime
+from typing import Optional
+
+import discord
+from discord.ext import tasks
+import pytz
 
 from database.db import user_transactions_collection
 from bot import bot
-
 from utils.bot_state import save_last_message_id_to_db, get_last_message_id_from_db
 from utils.emojis import PNC_EMOJI_STR
-
 from config import RANKING_CHANNEL_ID
 
+# ========================================
+# 定数
+# ========================================
 JST = pytz.timezone("Asia/Tokyo")
-
 STORAGE_PATH = "last_monthly_ranking.json"
+EXCLUDED_USER_ID = 1154344959646908449
+TARGET_USER_ID = 1154344959646908449
 
-def save_last_message_id(message_id):
+
+# ========================================
+# ヘルパー関数
+# ========================================
+def save_last_message_id(message_id: int) -> None:
+    """最後のランキングメッセージIDをファイルに保存（レガシー）"""
     with open(STORAGE_PATH, "w") as f:
         json.dump({"message_id": message_id}, f)
 
-def get_last_message_id():
+
+def get_last_message_id() -> Optional[int]:
+    """最後のランキングメッセージIDをファイルから取得（レガシー）"""
     if not os.path.exists(STORAGE_PATH):
         return None
     with open(STORAGE_PATH, "r") as f:
         data = json.load(f)
     return data.get("message_id")
 
+# ========================================
+# 定期タスク
+# ========================================
 @tasks.loop(time=[time(hour=0, minute=0, tzinfo=JST), time(hour=12, minute=0, tzinfo=JST)])
-async def send_monthly_usage_ranking():
+async def send_monthly_usage_ranking() -> None:
+    """月間ランキングを定期的に送信（0時と12時）"""
     await send_or_update_ranking()
 
-JST = pytz.timezone("Asia/Tokyo")
 
-async def send_or_update_ranking():
+# ========================================
+# ランキング送信処理
+# ========================================
+async def send_or_update_ranking() -> None:
+    """月間利用ランキングを送信または更新"""
     try:
         now = datetime.now(JST)
         start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
