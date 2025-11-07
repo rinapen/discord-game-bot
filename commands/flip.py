@@ -28,7 +28,7 @@ async def on_coinflip_command(message: discord.Message) -> None:
         bet = int(message.content.split()[1])
     except (IndexError, ValueError):
         embed = discord.Embed(
-            description="`$フリップ ベット額`の形式で入力してください。",
+            description="`?フリップ ベット額`の形式で入力してください。",
             color=discord.Color.red()
         )
         await message.channel.send(embed=embed)

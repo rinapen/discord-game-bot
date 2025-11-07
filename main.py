@@ -27,6 +27,7 @@ from tasks.usage_ranking import send_monthly_usage_ranking, send_or_update_ranki
 from utils.account_panel import setup_account_panel
 from utils.invite_panel import check_invite_usage_diff, initialize_invite_cache, setup_invite_panel
 from utils.pnc import get_daily_profit, get_total_pnc, get_total_revenue
+from ui.info_panel import send_info_panel
 
 # ========================================
 # 定期タスク
@@ -213,6 +214,9 @@ async def on_ready() -> None:
     # アカウントパネルのセットアップ
     await setup_account_panel()
     # await setup_invite_panel(bot)  # 必要に応じてコメント解除
+    
+    # 情報パネルのセットアップ
+    await send_info_panel(bot)
 
     # 定期タスクの開始
     if not daily_report_task.is_running():

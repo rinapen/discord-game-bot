@@ -12,7 +12,7 @@ import discord
 from discord.ext import tasks
 import pytz
 
-from database.db import user_transactions_collection
+from database.db import financial_transactions_collection
 from bot import bot
 from utils.bot_state import save_last_message_id_to_db, get_last_message_id_from_db
 from utils.emojis import PNC_EMOJI_STR
@@ -73,7 +73,7 @@ async def send_or_update_ranking() -> None:
         total_payin = 0  # 全体Payin合計
         total_payout = 0  # 全体Payout合計
 
-        cursor = user_transactions_collection.find({
+        cursor = financial_transactions_collection.find({
             "transactions.timestamp": {"$gte": start, "$lt": end}
         })
 

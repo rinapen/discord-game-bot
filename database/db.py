@@ -46,7 +46,7 @@ def get_collection(collection_name: str) -> Collection:
 # メインコレクション
 tokens_collection = get_collection(config.TOKENS_COLLECTION)
 blacklist_collection = get_collection(config.BLACKLIST_COLLECTION)
-user_transactions_collection = get_collection(config.USER_TRANSACTIONS_COLLECTION)
+financial_transactions_collection = get_collection(config.FINANCIAL_TRANSACTIONS_COLLECTION)
 casino_transactions_collection = get_collection(config.CASINO_TRANSACTION_COLLECTION)
 users_collection = get_collection(config.USERS_COLLECTION)
 casino_stats_collection = get_collection(config.CASINO_STATS_COLLECTION)
@@ -62,6 +62,10 @@ invite_redeem_collection = get_collection("invite_redeem")
 active_users_collection = get_collection("active_users")
 pf_collection = get_collection("pf_params")
 casino_tables_collection = get_collection("casino_tables")
+prize_pockets_collection = get_collection("prize_pockets")
+carry_over_points_collection = get_collection("carry_over_points")
+accounts_collection = get_collection("accounts")
+exchanged_accounts_collection = get_collection("exchanged_accounts")
 
 # ========================================
 # Provably Fair関連
@@ -220,8 +224,8 @@ def get_user_transactions(
     game_type: Optional[str] = None,
     days: Optional[int] = None
 ) -> list[dict[str, Any]]:
-    """指定ユーザーの取引履歴を取得（オプションでゲーム種別や期間も絞れる）"""
-    doc = user_transactions_collection.find_one({"user_id": user_id})
+    """指定ユーザーの金銭取引履歴を取得（payin、payout、exchangeのみ）"""
+    doc = financial_transactions_collection.find_one({"user_id": user_id})
 
     if not doc or "transactions" not in doc:
         return []
@@ -401,3 +405,184 @@ def get_casino_table_count() -> int:
         テーブル数
     """
     return casino_tables_collection.count_documents({})
+
+
+# ========================================
+# 景品ポケット管理
+# ========================================
+def get_prize_pocket(user_id: int) -> Optional[dict[str, Any]]:
+    """
+    ユーザーの景品ポケット情報を取得
+    
+    Args:
+        user_id: ユーザーID
+    
+    Returns:
+        景品ポケット情報 {"large": 個数, "medium": 個数, "small": 個数, "accounts": 個数}
+    """
+    pocket = prize_pockets_collection.find_one({"user_id": user_id})
+    if pocket:
+        return {
+            "large": pocket.get("large", 0),
+            "medium": pocket.get("medium", 0),
+            "small": pocket.get("small", 0),
+            "accounts": pocket.get("accounts", 0)
+        }
+    return {"large": 0, "medium": 0, "small": 0, "accounts": 0}
+
+
+def add_prizes_to_pocket(
+    user_id: int,
+    large: int = 0,
+    medium: int = 0,
+    small: int = 0,
+    accounts: int = 0
+) -> None:
+    """
+    ユーザーの景品ポケットに景品を追加
+    
+    Args:
+        user_id: ユーザーID
+        large: 大景品の個数
+        medium: 中景品の個数
+        small: 小景品の個数
+        accounts: アカウント交換券の個数
+    """
+    prize_pockets_collection.update_one(
+        {"user_id": user_id},
+        {
+            "$inc": {
+                "large": large,
+                "medium": medium,
+                "small": small,
+                "accounts": accounts
+            }
+        },
+        upsert=True
+    )
+
+
+def clear_prize_pocket(user_id: int) -> dict[str, Any]:
+    """
+    ユーザーの景品ポケットをクリア
+    
+    Args:
+        user_id: ユーザーID
+    
+    Returns:
+        dict: クリア前の景品情報
+    """
+    pocket = prize_pockets_collection.find_one({"user_id": user_id})
+    prize_pockets_collection.delete_one({"user_id": user_id})
+    return pocket if pocket else {}
+
+
+# ========================================
+# 繰越ポイント管理
+# ========================================
+def get_carry_over_points(user_id: int) -> int:
+    """
+    ユーザーの繰越ポイントを取得
+    
+    Args:
+        user_id: ユーザーID
+    
+    Returns:
+        int: 繰越ポイント（PNC）
+    """
+    doc = carry_over_points_collection.find_one({"user_id": user_id})
+    return doc.get("points", 0) if doc else 0
+
+
+def add_carry_over_points(user_id: int, points: int) -> None:
+    """
+    ユーザーの繰越ポイントを追加
+    
+    Args:
+        user_id: ユーザーID
+        points: 追加するポイント（PNC）
+    """
+    carry_over_points_collection.update_one(
+        {"user_id": user_id},
+        {"$inc": {"points": points}},
+        upsert=True
+    )
+
+
+def clear_carry_over_points(user_id: int) -> int:
+    """
+    ユーザーの繰越ポイントをクリアして返す
+    
+    Args:
+        user_id: ユーザーID
+    
+    Returns:
+        int: クリア前のポイント
+    """
+    doc = carry_over_points_collection.find_one({"user_id": user_id})
+    points = doc.get("points", 0) if doc else 0
+    
+    if points > 0:
+        carry_over_points_collection.delete_one({"user_id": user_id})
+    
+    return points
+
+
+# ========================================
+# アカウント交換管理
+# ========================================
+def get_random_unused_account(count: int = 1) -> list[dict[str, Any]]:
+    """
+    未使用のアカウントをランダムに取得
+    
+    Args:
+        count: 取得するアカウント数
+    
+    Returns:
+        list[dict]: アカウント情報のリスト [{"_id": ..., "email": ..., "password": ...}]
+    """
+    # 既に交換済みのアカウントIDを取得
+    exchanged_ids = set(
+        doc["account_id"] for doc in exchanged_accounts_collection.find({})
+    )
+    
+    # 未使用のアカウントを取得
+    available_accounts = list(
+        accounts_collection.find({"_id": {"$nin": list(exchanged_ids)}})
+    )
+    
+    if not available_accounts:
+        return []
+    
+    # ランダムにシャッフルして必要数取得
+    import random
+    random.shuffle(available_accounts)
+    return available_accounts[:min(count, len(available_accounts))]
+
+
+def mark_accounts_as_exchanged(account_ids: list, user_id: int) -> None:
+    """
+    アカウントを交換済みとしてマーク
+    
+    Args:
+        account_ids: アカウントIDのリスト（ObjectId）
+        user_id: 交換したユーザーのID
+    """
+    for account_id in account_ids:
+        exchanged_accounts_collection.insert_one({
+            "account_id": account_id,
+            "user_id": user_id,
+            "exchanged_at": datetime.datetime.now()
+        })
+
+
+def get_available_account_count() -> int:
+    """
+    利用可能なアカウント数を取得
+    
+    Returns:
+        int: 未使用アカウント数
+    """
+    total_accounts = accounts_collection.count_documents({})
+    exchanged_count = exchanged_accounts_collection.count_documents({})
+    return total_accounts - exchanged_count

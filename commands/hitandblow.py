@@ -16,10 +16,10 @@ from ui.game.hitandblow import (
 
 async def on_hitandblow_command(message: discord.Message):
     try:
-        pattern = r"\$ヒットアンドブロー\s+<@!?(\d+)>\s+(\d+)"
+        pattern = r"\?ヒットアンドブロー\s+<@!?(\d+)>\s+(\d+)"
         match = re.match(pattern, message.content)
         if not match:
-            embed = create_embed("", "`$ヒットアンドブロー @ユーザー 掛け金` の形式で入力してください。", discord.Color.red())
+            embed = create_embed("", "`?ヒットアンドブロー @ユーザー 掛け金` の形式で入力してください。", discord.Color.red())
             await message.channel.send(embed=embed)
             return
 

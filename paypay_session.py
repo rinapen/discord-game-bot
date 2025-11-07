@@ -97,7 +97,7 @@ class PayPaySession:
             print("   実際のPayPayに接続します")
             print("=" * 60)
             self.tokens = get_tokens()
-            self.login()
+        self.login()
 
     def login(self):
         """PayPayにログイン（本番モードのみ）"""

@@ -85,7 +85,7 @@ SETTINGS_COLLECTION: Final[str] = os.getenv("SETTINGS_COLLECTION", "settings")
 CASINO_STATS_COLLECTION: Final[str] = os.getenv("CASINO_STATS_COLLECTION", "casino_stats")
 MODELS_COLLECTION: Final[str] = os.getenv("MODELS_COLLECTION", "models")
 BLACKJACK_LOGS_COLLECTION: Final[str] = os.getenv("BLACKJACK_LOGS_COLLECTION", "blackjack_logs")
-USER_TRANSACTIONS_COLLECTION: Final[str] = os.getenv("USER_TRANSACTIONS_COLLECTION", "user_transactions")
+FINANCIAL_TRANSACTIONS_COLLECTION: Final[str] = os.getenv("FINANCIAL_TRANSACTIONS_COLLECTION", "financial_transactions")
 CASINO_TRANSACTION_COLLECTION: Final[str] = os.getenv("CASINO_TRANSACTION_COLLECTION", "casino_transactions")
 BET_HISTORY_COLLECTION: Final[str] = os.getenv("BET_HISTORY_COLLECTION", "bet_history")
 BOT_STATE_COLLECTION: Final[str] = os.getenv("BOT_STATE_COLLECTION", "bot_state")
@@ -100,6 +100,18 @@ FEE_RATE: Final[float] = 0.05  # 5% の手数料
 PAYOUT_MIN_JPY: Final[int] = 100
 PAYOUT_MIN_PNC: Final[int] = PAYOUT_MIN_JPY * 10
 PAYOUT_DISABLED: Final[bool] = True
+
+# 景品交換設定
+EXCHANGE_ENABLED: Final[bool] = os.getenv("EXCHANGE_ENABLED", "false").lower() == "true"
+
+# 景品の種類と必要PNC（手数料込み）
+PRIZE_LARGE_JPY: Final[int] = 5000  # 大景品の換金額
+PRIZE_MEDIUM_JPY: Final[int] = 1000  # 中景品の換金額
+PRIZE_SMALL_JPY: Final[int] = 500   # 小景品の換金額
+
+# アカウント交換設定
+ACCOUNT_EXCHANGE_JPY: Final[int] = 80  # アカウント1つの換金額
+ACCOUNT_EXCHANGE_PNC_BASE: Final[int] = 800  # 基本PNC（手数料別）
 
 # ========================================
 # PayPay設定
@@ -119,6 +131,10 @@ GUILD_ID: Final[int] = safe_get_int_env("GUILD_ID", 0)
 ACCOUNT_CHANNEL_ID: Final[int] = safe_get_int_env("ACCOUNT_CHANNEL_ID", 0)
 INVITE_PANEL_CHANNEL_ID: Final[int] = safe_get_int_env("INVITE_PANEL_CHANNEL_ID", 0)
 HITANDBLOW_CATEGORY_ID: Final[int] = safe_get_int_env("HITANDBLOW_CATEGORY_ID", 0)
+INFO_PANEL_CHANNEL_ID: Final[int] = safe_get_int_env("INFO_PANEL_CHANNEL_ID", 0)
+
+# ロールID
+PURCHASER_ROLE_ID: Final[int] = safe_get_int_env("PURCHASER_ROLE_ID", 0)
 
 # ========================================
 # アセットURL
@@ -227,5 +243,6 @@ EXCLUDED_USER_IDS: Final[list[int]] = safe_get_excluded_user_ids()
 CASINO_LOG_CHANNEL_ID: Final[str | None] = safe_get_str_env("CASINO_LOG_CHANNEL_ID")
 PAYIN_LOG_CHANNEL_ID: Final[str | None] = safe_get_str_env("PAYIN_LOG_CHANNEL_ID")
 PAYOUT_LOG_CHANNEL_ID: Final[str | None] = safe_get_str_env("PAYOUT_LOG_CHANNEL_ID")
+EXCHANGE_LOG_CHANNEL_ID: Final[str | None] = safe_get_str_env("EXCHANGE_LOG_CHANNEL_ID")
 RANKING_CHANNEL_ID: Final[str | None] = safe_get_str_env("RANKING_CHANNEL_ID")
 ADMIN_CHANNEL_ID: Final[str | None] = safe_get_str_env("ADMIN_CHANNEL_ID")

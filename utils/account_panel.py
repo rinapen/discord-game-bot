@@ -34,7 +34,7 @@ async def setup_account_panel():
         embed.add_field(name="登録", value="初めての方は、こちらからアカウントを紐付けてください。", inline=False)
         embed.add_field(name="入金", value="紐付け済みの方は、こちらから入金してください。", inline=False)
 
-        new_msg = await channel.send(embed=embed, view=AccountView())
+        new_msg = await channel.send(view=AccountView())
         await save_account_panel_message_id(new_msg.id)
         print(f"[LOG] 新しいアカウントパネルを送信しました: {new_msg.id}")
     except Exception as e:

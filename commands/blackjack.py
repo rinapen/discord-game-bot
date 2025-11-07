@@ -15,11 +15,11 @@ from ui.game.blackjack import BlackjackGame, BlackjackView, blackjack_games
 
 async def on_blackjack_command(message: discord.Message):
     try:
-        pattern = r"\$bj\s+(\d+)"
+        pattern = r"\?bj\s+(\d+)"
         match = re.match(pattern, message.content)
 
         if not match:
-            embed = create_embed("", "使い方: `$bj <掛け金>`", discord.Color.red())
+            embed = create_embed("", "`?bj <掛け金>`の形式で入力してください。", discord.Color.red())
             await message.channel.send(embed=embed)
             return
 

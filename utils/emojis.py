@@ -20,3 +20,16 @@ GERO_FACE = discord.PartialEmoji(name="038", id=1390463056433254571)
 WIN_EMOJI="<:up:1435884281158434897>"
 LOSE_EMOJI="<:down_mark:1347908644897034320>"
 DRAW_EMOJI="<:draw:1349449575370592336>"
+
+CLOSED_EMOJI = discord.PartialEmoji(name="closed", id=1436139705581436938)
+
+# 情報パネル用絵文字
+TIP1_EMOJI = discord.PartialEmoji(name="tip1", id=1436192655431307295)  # サーバー
+TIP2_EMOJI = discord.PartialEmoji(name="tip2", id=1436193280613159014)  # ゲーム
+TIP3_EMOJI = discord.PartialEmoji(name="tip3", id=1436193282357989457)  # 景品
+TIP4_EMOJI = discord.PartialEmoji(name="tip4", id=1436216418180796456)  # コマンド
+
+# じゃんけん用絵文字
+ROCK_HAND_EMOJI = discord.PartialEmoji(name="rock", id=1436218997887733881)
+SCISSOR_HAND_EMOJI = discord.PartialEmoji(name="scissors", id=1436219002367246356)
+PAPER_HAND_EMOJI = discord.PartialEmoji(name="paper", id=1436218992787460117)

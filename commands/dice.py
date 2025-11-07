@@ -18,7 +18,7 @@ async def on_dice_command(message):
     try:
         args = message.content.strip().split()
         if len(args) != 2 or not args[1].isdigit():
-            embed = create_embed("", "`$ダイス 金額`の形式で入力してください。", discord.Color.red())
+            embed = create_embed("", "`?ダイス 金額`の形式で入力してください。", discord.Color.red())
             embed.set_author(
                 name=f"{message.author.name}",
                 icon_url=message.author.display_avatar.url

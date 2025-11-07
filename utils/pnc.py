@@ -13,8 +13,9 @@ from discord import Embed, ButtonStyle
 from discord.ui import View, Button
 import pytz
 
-from database.db import users_collection, user_transactions_collection
+from database.db import users_collection, financial_transactions_collection
 from bot import bot
+import config
 
 # ========================================
 # 定数
@@ -64,6 +65,72 @@ def generate_random_amount() -> Decimal:
     """
     return Decimal(random.randint(1, 90))
 
+
+# ========================================
+# 景品交換関連
+# ========================================
+def calculate_prize_pnc(jpy_value: int) -> int:
+    """
+    景品に必要なPNC（手数料込み）を計算
+    
+    Args:
+        jpy_value: 換金額（円）
+    
+    Returns:
+        int: 必要なPNC
+    """
+    jpy_decimal = Decimal(jpy_value)
+    fee_jpy = max((jpy_decimal * Decimal("0.14")).quantize(Decimal("1"), rounding=ROUND_HALF_UP), Decimal(10))
+    total_jpy = jpy_decimal + fee_jpy
+    return int(jpy_to_pnc(total_jpy))
+
+
+def calculate_account_exchange_pnc() -> int:
+    """
+    アカウント交換に必要なPNC（手数料込み）を計算
+    
+    Returns:
+        int: 必要なPNC
+    """
+    return calculate_prize_pnc(config.ACCOUNT_EXCHANGE_JPY)
+
+
+def calculate_prizes_from_balance(balance: int) -> dict[str, int]:
+    """
+    残高から景品の内訳を計算
+    
+    Args:
+        balance: PNC残高
+    
+    Returns:
+        dict: 景品の内訳 {"large": 個数, "medium": 個数, "small": 個数, "remainder": 余りPNC}
+    """
+    # 各景品に必要なPNC（手数料込み）
+    large_pnc = calculate_prize_pnc(config.PRIZE_LARGE_JPY)
+    medium_pnc = calculate_prize_pnc(config.PRIZE_MEDIUM_JPY)
+    small_pnc = calculate_prize_pnc(config.PRIZE_SMALL_JPY)
+    
+    remaining = balance
+    
+    # 大景品
+    large_count = remaining // large_pnc
+    remaining = remaining % large_pnc
+    
+    # 中景品
+    medium_count = remaining // medium_pnc
+    remaining = remaining % medium_pnc
+    
+    # 小景品
+    small_count = remaining // small_pnc
+    remainder = remaining % small_pnc
+    
+    return {
+        "large": int(large_count),
+        "medium": int(medium_count),
+        "small": int(small_count),
+        "remainder": int(remainder)
+    }
+
 # ========================================
 # 利益計算関数
 # ========================================
@@ -90,7 +157,7 @@ def get_daily_profit(target_date: str) -> int:
 
     total_profit = 0
 
-    users = user_transactions_collection.find({})
+    users = financial_transactions_collection.find({})
     for user in users:
         for txn in user.get("transactions", []):
             ts = txn.get("timestamp")
@@ -148,7 +215,7 @@ def get_total_revenue() -> int:
     user_count = 0
     txn_count = 0
 
-    users = user_transactions_collection.find({})
+    users = financial_transactions_collection.find({})
     for user in users:
         user_id = user.get("user_id", "不明")
         if user_id in EXCLUDED_USER_IDS:
