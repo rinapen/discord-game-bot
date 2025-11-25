@@ -18,7 +18,7 @@ async def on_dice_command(message):
     try:
         args = message.content.strip().split()
         if len(args) != 2 or not args[1].isdigit():
-            embed = create_embed("", "`?ダイス 金額`の形式で入力してください。", discord.Color.red())
+            embed = create_embed("", "`?ダイス <掛け金>`の形式で入力してください。", discord.Color.red())
             embed.set_author(
                 name=f"{message.author.name}",
                 icon_url=message.author.display_avatar.url
@@ -26,9 +26,9 @@ async def on_dice_command(message):
         
             return await message.channel.send(embed=embed)
 
-        bet_amount = int(args[1])
+        bet = int(args[1])
         min_bet = 50
-        if bet_amount < min_bet:
+        if bet < min_bet:
             embed = EmbedFactory.bet_too_low(min_bet=min_bet)
             embed.set_author(
                 name=f"{message.author.name}",
@@ -42,14 +42,14 @@ async def on_dice_command(message):
             embed = EmbedFactory.not_registered()
             await message.channel.send(embed=embed)
             return
-        if bet_amount > balance:
+        if bet > balance:
             embed = EmbedFactory.insufficient_balance(balance=balance)
             embed.set_author(
                 name=f"{message.author.name}",
                 icon_url=message.author.display_avatar.url
             )
             return await message.channel.send(embed=embed)
-        update_user_balance(user_id, -bet_amount)
+        update_user_balance(user_id, -bet)
 
         def roll():
             return random.randint(1, 6), random.randint(1, 6)
@@ -60,7 +60,7 @@ async def on_dice_command(message):
         gif_path1 = f"{DICE_FOLDER}/gif/{die1}.gif"
         gif_path2 = f"{DICE_FOLDER}/gif/{die2}.gif"
         files = [File(gif_path1, filename="dice1.gif"), File(gif_path2, filename="dice2.gif")]
-        embed = create_embed(f"{CURRENCY_NAME}ダイス", f"{PNC_EMOJI_STR}`{bet_amount}`を賭けてサイコロを振っています...", BASE_COLOR_CODE)
+        embed = create_embed(f"{CURRENCY_NAME}ダイス", f"{PNC_EMOJI_STR}`{bet}`を賭けてサイコロを振っています...", BASE_COLOR_CODE)
         embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1219916908485283880/1389815902278647818/ChatGPT_Image_202572_12_51_52.png?ex=6865fe6c&is=6864acec&hm=1532507b0941122a27dbc8859aa83321cad484328bd9f310d43c3b7ed63a2fcc&")
         embed.set_author(
             name=f"{message.author.name}",
@@ -90,7 +90,7 @@ async def on_dice_command(message):
         await rolling_msg.edit(embed=result_embed, attachments=files)
 
         if total in [7, 11]:
-            winnings = bet_amount * 2
+            winnings = bet * 2
             update_user_balance(user_id, winnings)
             result_text = f"### {PNC_EMOJI_STR}`{winnings}` **WIN**"
             summary_embed = create_embed("", result_text, BASE_COLOR_CODE)
@@ -103,25 +103,25 @@ async def on_dice_command(message):
                 interaction=FakeInteraction(),
                 winorlose="WIN",
                 emoji=WIN_EMOJI,
-                price=winnings - bet_amount,
+                price=winnings - bet,
                 description=f"",
                 color=discord.Color.from_str("#26ffd4")
             )
 
         elif total in [2, 3, 12]:
-            result_text = f"### クラップス！\n# {PNC_EMOJI_STR}`{bet_amount}` **LOSE**"
+            result_text = f"### クラップス！\n# {PNC_EMOJI_STR}`{bet}` **LOSE**"
             summary_embed = create_embed("", result_text, BASE_COLOR_CODE)
             await message.channel.send(embed=summary_embed)
 
         else:
-            result_text = f"### ポイント: {total}\n# {PNC_EMOJI_STR}`{bet_amount}` 継続可能！"
+            result_text = f"### ポイント: {total}\n# {PNC_EMOJI_STR}`{bet}` 継続可能！"
             summary_embed = create_embed("", result_text, BASE_COLOR_CODE)
-            await message.channel.send(embed=summary_embed, view=ContinueButton(user_id, bet_amount, total))
-            ongoing_games[user_id] = {"bet": bet_amount, "point": total}
+            await message.channel.send(embed=summary_embed, view=ContinueButton(user_id, bet, total))
+            ongoing_games[user_id] = {"bet": bet, "point": total}
 
     except Exception as e:
         print("Dice error:", e)
         import traceback
         traceback.print_exc()
-        error_embed = create_embed("エラー", "⚠️ ゲーム中にエラーが発生しました。", discord.Color.red())
+        error_embed = create_embed("エラー", "ゲーム中にエラーが発生しました。", discord.Color.red())
         await message.channel.send(embed=error_embed)
