@@ -4,7 +4,6 @@ import discord
 
 from .balance import on_balance_command
 from .transfer import on_transfer_command
-from .exchange import on_exchange_command
 from .pocket import on_pocket_command
 from .redeem_account import on_redeem_account_command
 from .purchase import on_purchase_command
@@ -18,10 +17,6 @@ from .rps import on_rps_command
 TEXT_COMMANDS: dict[str, Callable[[discord.Message], Awaitable[None]]] = {
     "?残高": on_balance_command,
     "?送金": on_transfer_command,
-    "?交換": on_exchange_command,
-    "?ポケット": on_pocket_command,
-    "?引換": on_redeem_account_command,
-    "?買取": on_purchase_command,
     "?マインズ": on_mines_command,
     "?フリップ": on_coinflip_command,
     "?ダイス": on_dice_command,
