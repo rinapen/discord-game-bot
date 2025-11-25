@@ -10,7 +10,6 @@ from commands import register_all_text_commands
 from commands.table_management import setup_table_commands
 import config
 from utils.account_panel import setup_account_panel
-from ui.info_panel import send_info_panel
 
 async def keep_alive() -> None:
     while True:
@@ -30,9 +29,6 @@ async def on_ready() -> None:
     print(f"[✓] ログインに成功しました [{bot.user}]")
 
     await setup_account_panel()
-    
-    await send_info_panel(bot)
-
 
 async def main() -> None:
     asyncio.create_task(keep_alive())
