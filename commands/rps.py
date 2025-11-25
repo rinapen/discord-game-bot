@@ -10,7 +10,7 @@ from utils.embed import create_embed
 from utils.emojis import PNC_EMOJI_STR, WIN_EMOJI, ROCK_HAND_EMOJI, SCISSOR_HAND_EMOJI, PAPER_HAND_EMOJI
 from utils.logs import send_casino_log
 from utils.color import RPS_COLOR, SUCCESS_COLOR, DRAW_COLOR
-from database.db import get_user_balance, update_user_balance, load_pf_params, is_blacklisted
+from database.db import get_user_balance, update_user_balance, load_pf_params
 from config import CURRENCY_NAME, MIN_BET
 import aiohttp
 import traceback
