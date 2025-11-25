@@ -73,7 +73,6 @@ class BlackjackView(discord.ui.View):
             result = game.get_result()
             del blackjack_games[user_id]
 
-            # ✅ ユーザーアイコン取得
             async with aiohttp.ClientSession() as session:
                 async with session.get(interaction.user.display_avatar.url) as resp:
                     avatar_bytes = BytesIO(await resp.read())
@@ -101,13 +100,12 @@ class BlackjackView(discord.ui.View):
             file = discord.File(buf, filename="blackjack.png")
             embed = create_embed("バースト", outcome_text, color=color)
             embed.set_image(url="attachment://blackjack.png")
-            embed.add_field(name="🔐 Provably Fair", value=game.get_pf_embed_field(), inline=False)
+            embed.add_field(name="[🔐] Provably Fair", value=game.get_pf_embed_field(), inline=False)
             embed.set_footer(text="検証方法：HMAC-SHA256(client:nonce:cursor)でカード順を再計算可能")
             embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1219916908485283880/1386317663231414272/ChatGPT_Image_2025622_21_11_08.png?ex=6859446f&is=6857f2ef&hm=19507da3f6ae2ea49377b1112e687a6690cd37bb229cc4ebcd5a1fef2c5965e6&")
             await interaction.response.edit_message(embed=embed, attachments=[file], view=None)
             return
 
-        # ✅ 通常ヒット時もアイコンを反映
         async with aiohttp.ClientSession() as session:
             async with session.get(interaction.user.display_avatar.url) as resp:
                 avatar_bytes = BytesIO(await resp.read())
@@ -159,12 +157,10 @@ class BlackjackView(discord.ui.View):
             result_text = f"### {PNC_EMOJI_STR}`{game.bet:,}` **LOSE**"
             color = discord.Color.from_str("#ff3d74") 
 
-        # ✅ ユーザーのアバター画像を取得
         async with aiohttp.ClientSession() as session:
             async with session.get(interaction.user.display_avatar.url) as resp:
                 avatar_bytes = BytesIO(await resp.read())
 
-        # ✅ アバター情報付きで画像をレンダリング
         img = game.render_image(
             reveal_dealer=True,
             user_displayname=interaction.user.display_name,
@@ -176,7 +172,7 @@ class BlackjackView(discord.ui.View):
         file = discord.File(buf, filename="blackjack.png")
         embed = create_embed("結果", result_text, color=color)
         embed.set_image(url="attachment://blackjack.png")
-        embed.add_field(name="🔐 Provably Fair", value=game.get_pf_embed_field(), inline=False)
+        embed.add_field(name="[🔐] Provably Fair", value=game.get_pf_embed_field(), inline=False)
         embed.set_footer(text="検証方法：HMAC-SHA256(client:nonce:cursor)でカード順を再計算可能")
         embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1219916908485283880/1386317663231414272/ChatGPT_Image_2025622_21_11_08.png?ex=6859446f&is=6857f2ef&hm=19507da3f6ae2ea49377b1112e687a6690cd37bb229cc4ebcd5a1fef2c5965e6&")
         await interaction.response.edit_message(embed=embed, attachments=[file], view=None)
@@ -318,7 +314,7 @@ class BlackjackGame:
     
     def get_provably_fair_fields(self):
         return (
-            f"✨ 検証用:\n"
+            f"検証用:\n"
             f"ServerSeedHash: `{self.pf.server_seed_hash}`\n"
             f"ClientSeed: `{self.pf.client_seed}`\n"
             f"Nonce: `{self.pf.nonce}`"
